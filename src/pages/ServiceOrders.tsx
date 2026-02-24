@@ -1,0 +1,250 @@
+import { useState } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { ServiceOrder, Client, Product, Technician, CompanyInfo } from '@/types';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, Search, Trash2, Edit, FileDown } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+const ServiceOrders = () => {
+  const [orders, setOrders] = useLocalStorage<ServiceOrder[]>('gps_orders', []);
+  const [clients] = useLocalStorage<Client[]>('gps_clients', []);
+  const [products] = useLocalStorage<Product[]>('gps_products', []);
+  const [technicians] = useLocalStorage<Technician[]>('gps_technicians', []);
+  const [company] = useLocalStorage<CompanyInfo>('gps_company', { name: 'GPSXPRESS', cnpj: '', ie: '', address: '', city: '', state: '', zipCode: '', phone: '', email: '', website: '' });
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<ServiceOrder | null>(null);
+  const [form, setForm] = useState<Partial<ServiceOrder>>({ status: 'open', priority: 'medium' });
+
+  const filtered = orders.filter(o => {
+    const matchSearch = o.number.includes(search) || o.clientName.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === 'all' || o.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  const handleSave = () => {
+    if (!form.clientId || !form.description) return;
+    const client = clients.find(c => c.id === form.clientId);
+    const tech = technicians.find(t => t.id === form.technicianId);
+    const prod = products.find(p => p.id === form.productId);
+
+    if (editing) {
+      setOrders(orders.map(o => o.id === editing.id ? {
+        ...o, ...form,
+        clientName: client?.name || o.clientName,
+        technicianName: tech?.name || o.technicianName,
+        productName: prod?.name || o.productName,
+      } as ServiceOrder : o));
+    } else {
+      const newOrder: ServiceOrder = {
+        id: crypto.randomUUID(),
+        number: String(orders.length + 1).padStart(5, '0'),
+        clientId: form.clientId || '',
+        clientName: client?.name || '',
+        technicianId: form.technicianId || '',
+        technicianName: tech?.name || '',
+        productId: form.productId || '',
+        productName: prod?.name || '',
+        description: form.description || '',
+        diagnosis: form.diagnosis || '',
+        solution: form.solution || '',
+        status: form.status as ServiceOrder['status'] || 'open',
+        priority: form.priority as ServiceOrder['priority'] || 'medium',
+        value: form.value || 0,
+        createdAt: new Date().toISOString(),
+      };
+      setOrders([...orders, newOrder]);
+    }
+    setForm({ status: 'open', priority: 'medium' });
+    setEditing(null);
+    setOpen(false);
+  };
+
+  const handleEdit = (o: ServiceOrder) => { setForm(o); setEditing(o); setOpen(true); };
+  const handleDelete = (id: string) => setOrders(orders.filter(o => o.id !== id));
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(company.name || 'GPSXPRESS', 14, 20);
+    doc.setFontSize(9);
+    doc.text(`CNPJ: ${company.cnpj} | Tel: ${company.phone} | ${company.email}`, 14, 27);
+    doc.text(`${company.address}, ${company.city}/${company.state} - CEP: ${company.zipCode}`, 14, 32);
+    doc.setFontSize(12);
+    doc.text('Relatório de Ordens de Serviço', 14, 42);
+
+    autoTable(doc, {
+      startY: 48,
+      head: [['Nº', 'Cliente', 'Técnico', 'Status', 'Valor']],
+      body: filtered.map(o => [
+        `#${o.number}`,
+        o.clientName,
+        o.technicianName,
+        o.status === 'open' ? 'Aberta' : o.status === 'in_progress' ? 'Em Andamento' : o.status === 'completed' ? 'Concluída' : 'Cancelada',
+        `R$ ${o.value?.toFixed(2)}`,
+      ]),
+    });
+
+    doc.save('relatorio-os.pdf');
+  };
+
+  const exportSinglePDF = (o: ServiceOrder) => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(company.name || 'GPSXPRESS', 14, 20);
+    doc.setFontSize(9);
+    doc.text(`CNPJ: ${company.cnpj} | Tel: ${company.phone} | ${company.email}`, 14, 27);
+    doc.text(`${company.address}, ${company.city}/${company.state} - CEP: ${company.zipCode}`, 14, 32);
+
+    doc.setFontSize(14);
+    doc.text(`Ordem de Serviço #${o.number}`, 14, 45);
+    doc.setFontSize(10);
+    const y = 55;
+    const lines = [
+      `Cliente: ${o.clientName}`,
+      `Técnico: ${o.technicianName}`,
+      `Produto: ${o.productName}`,
+      `Status: ${o.status === 'open' ? 'Aberta' : o.status === 'in_progress' ? 'Em Andamento' : o.status === 'completed' ? 'Concluída' : 'Cancelada'}`,
+      `Prioridade: ${o.priority === 'low' ? 'Baixa' : o.priority === 'medium' ? 'Média' : 'Alta'}`,
+      `Valor: R$ ${o.value?.toFixed(2)}`,
+      `Data: ${new Date(o.createdAt).toLocaleDateString('pt-BR')}`,
+      '',
+      `Descrição: ${o.description}`,
+      `Diagnóstico: ${o.diagnosis}`,
+      `Solução: ${o.solution}`,
+    ];
+    lines.forEach((line, i) => doc.text(line, 14, y + i * 7));
+    doc.save(`os-${o.number}.pdf`);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="font-display text-2xl font-bold tracking-wider">
+          ORDENS DE <span className="text-primary">SERVIÇO</span>
+        </h1>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportPDF} className="font-display tracking-wider text-xs">
+            <FileDown className="h-4 w-4 mr-1" /> PDF
+          </Button>
+          <Dialog open={open} onOpenChange={(o) => { setOpen(o); if(!o) { setEditing(null); setForm({ status: 'open', priority: 'medium' }); } }}>
+            <DialogTrigger asChild>
+              <Button className="glow-primary font-display tracking-wider"><Plus className="h-4 w-4 mr-2" /> NOVA OS</Button>
+            </DialogTrigger>
+            <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="font-display tracking-wider">{editing ? 'EDITAR' : 'NOVA'} <span className="text-primary">ORDEM DE SERVIÇO</span></DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Select value={form.clientId || ''} onValueChange={v => setForm({...form, clientId: v})}>
+                  <SelectTrigger className="bg-secondary"><SelectValue placeholder="Cliente *" /></SelectTrigger>
+                  <SelectContent>{clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select value={form.technicianId || ''} onValueChange={v => setForm({...form, technicianId: v})}>
+                  <SelectTrigger className="bg-secondary"><SelectValue placeholder="Técnico" /></SelectTrigger>
+                  <SelectContent>{technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select value={form.productId || ''} onValueChange={v => setForm({...form, productId: v})}>
+                  <SelectTrigger className="bg-secondary"><SelectValue placeholder="Produto" /></SelectTrigger>
+                  <SelectContent>{products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select value={form.status || 'open'} onValueChange={v => setForm({...form, status: v as ServiceOrder['status']})}>
+                  <SelectTrigger className="bg-secondary"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">Aberta</SelectItem>
+                    <SelectItem value="in_progress">Em Andamento</SelectItem>
+                    <SelectItem value="completed">Concluída</SelectItem>
+                    <SelectItem value="cancelled">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={form.priority || 'medium'} onValueChange={v => setForm({...form, priority: v as ServiceOrder['priority']})}>
+                  <SelectTrigger className="bg-secondary"><SelectValue placeholder="Prioridade" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Baixa</SelectItem>
+                    <SelectItem value="medium">Média</SelectItem>
+                    <SelectItem value="high">Alta</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input placeholder="Valor R$" type="number" value={form.value || ''} onChange={e => setForm({...form, value: Number(e.target.value)})} className="bg-secondary" />
+                <Textarea placeholder="Descrição do serviço *" value={form.description || ''} onChange={e => setForm({...form, description: e.target.value})} className="bg-secondary col-span-full" />
+                <Textarea placeholder="Diagnóstico" value={form.diagnosis || ''} onChange={e => setForm({...form, diagnosis: e.target.value})} className="bg-secondary col-span-full" />
+                <Textarea placeholder="Solução" value={form.solution || ''} onChange={e => setForm({...form, solution: e.target.value})} className="bg-secondary col-span-full" />
+              </div>
+              <Button onClick={handleSave} className="w-full mt-2 glow-primary font-display tracking-wider">SALVAR</Button>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar OS..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 bg-secondary" />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="bg-secondary w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="open">Abertas</SelectItem>
+            <SelectItem value="in_progress">Em Andamento</SelectItem>
+            <SelectItem value="completed">Concluídas</SelectItem>
+            <SelectItem value="cancelled">Canceladas</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card className="bg-card border-border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-muted-foreground bg-secondary/50">
+                <th className="text-left py-3 px-4">Nº</th>
+                <th className="text-left py-3 px-4">Cliente</th>
+                <th className="text-left py-3 px-4 hidden md:table-cell">Técnico</th>
+                <th className="text-left py-3 px-4">Status</th>
+                <th className="text-right py-3 px-4 hidden sm:table-cell">Valor</th>
+                <th className="text-right py-3 px-4">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma OS encontrada</td></tr>
+              ) : filtered.map(o => (
+                <tr key={o.id} className="border-b border-border/50 hover:bg-secondary/30">
+                  <td className="py-3 px-4 font-display text-primary">#{o.number}</td>
+                  <td className="py-3 px-4 font-medium">{o.clientName}</td>
+                  <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{o.technicianName}</td>
+                  <td className="py-3 px-4">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      o.status === 'open' ? 'bg-warning/20 text-warning' :
+                      o.status === 'in_progress' ? 'bg-primary/20 text-primary' :
+                      o.status === 'completed' ? 'bg-success/20 text-success' :
+                      'bg-destructive/20 text-destructive'
+                    }`}>
+                      {o.status === 'open' ? 'Aberta' : o.status === 'in_progress' ? 'Em Andamento' : o.status === 'completed' ? 'Concluída' : 'Cancelada'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-right hidden sm:table-cell">R$ {o.value?.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-right whitespace-nowrap">
+                    <Button variant="ghost" size="icon" onClick={() => exportSinglePDF(o)} title="PDF"><FileDown className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(o)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(o.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+export default ServiceOrders;
