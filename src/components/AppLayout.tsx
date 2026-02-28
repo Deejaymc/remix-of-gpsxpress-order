@@ -18,7 +18,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground">{user?.email}</span>
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-display text-xs">
-                {user?.name?.charAt(0) || 'A'}
+                {user?.email?.charAt(0).toUpperCase() || 'A'}
               </div>
             </div>
           </header>
