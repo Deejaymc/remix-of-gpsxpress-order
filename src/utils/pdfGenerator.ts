@@ -57,8 +57,8 @@ function drawHeader(doc: jsPDF, company: CompanyInfo) {
   const rightX = 196;
   let lineY = 13;
   
-  if (company.cnpj) {
-    doc.text(`CNPJ: ${company.cnpj}`, rightX, lineY, { align: 'right' });
+  if (company.nif) {
+    doc.text(`NIF: ${company.nif}`, rightX, lineY, { align: 'right' });
     lineY += 4;
   }
   if (company.ie) {
@@ -74,7 +74,7 @@ function drawHeader(doc: jsPDF, company: CompanyInfo) {
     lineY += 4;
   }
   if (company.address) {
-    doc.text(`${company.address}, ${company.city}/${company.state} - ${company.zipCode}`, rightX, lineY, { align: 'right' });
+    doc.text(`${company.address}, ${company.provincia}/${company.municipio} - ${company.rua}`, rightX, lineY, { align: 'right' });
   }
 
   // Divider line
