@@ -12,18 +12,22 @@ import Clients from "./pages/Clients";
 import Products from "./pages/Products";
 import Technicians from "./pages/Technicians";
 import CompanySettings from "./pages/CompanySettings";
+import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+const ProtectedRoute = ({ children, adminOnly }: { children: React.ReactNode; adminOnly?: boolean }) => {
+  const { isAuthenticated, loading, isAdmin } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (adminOnly && !isAdmin) return <Navigate to="/" replace />;
   return <AppLayout>{children}</AppLayout>;
 };
 
 const AppRoutes = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   return (
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
@@ -33,6 +37,7 @@ const AppRoutes = () => {
       <Route path="/produtos" element={<ProtectedRoute><Products /></ProtectedRoute>} />
       <Route path="/tecnicos" element={<ProtectedRoute><Technicians /></ProtectedRoute>} />
       <Route path="/empresa" element={<ProtectedRoute><CompanySettings /></ProtectedRoute>} />
+      <Route path="/usuarios" element={<ProtectedRoute adminOnly><Users /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

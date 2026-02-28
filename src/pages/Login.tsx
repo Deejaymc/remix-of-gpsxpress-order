@@ -3,24 +3,28 @@ import { useAuth } from '@/contexts/AuthContext';
 import logo from '@/assets/logo.png';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, Mail, Loader2 } from 'lucide-react';
 
 const Login = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!login(email, password)) {
-      setError('Credenciais inválidas. Use qualquer e-mail e senha com 4+ caracteres.');
+    setError('');
+    setLoading(true);
+    const result = await login(email, password);
+    if (!result.success) {
+      setError(result.error || 'Credenciais inválidas.');
     }
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
@@ -46,6 +50,7 @@ const Login = () => {
               onChange={e => setEmail(e.target.value)}
               className="pl-10 bg-secondary border-border focus:border-primary"
               required
+              disabled={loading}
             />
           </div>
           <div className="relative">
@@ -57,13 +62,14 @@ const Login = () => {
               onChange={e => setPassword(e.target.value)}
               className="pl-10 bg-secondary border-border focus:border-primary"
               required
+              disabled={loading}
             />
           </div>
 
           {error && <p className="text-accent text-sm text-center">{error}</p>}
 
-          <Button type="submit" className="w-full font-display tracking-wider glow-primary">
-            ENTRAR
+          <Button type="submit" className="w-full font-display tracking-wider glow-primary" disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'ENTRAR'}
           </Button>
         </form>
       </div>

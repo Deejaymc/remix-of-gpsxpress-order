@@ -19,6 +19,7 @@ import {
   Wrench,
   Building2,
   LogOut,
+  Shield,
 } from 'lucide-react';
 
 const menuItems = [
@@ -28,10 +29,11 @@ const menuItems = [
   { title: 'Produtos', url: '/produtos', icon: Package },
   { title: 'Técnicos', url: '/tecnicos', icon: Wrench },
   { title: 'Empresa', url: '/empresa', icon: Building2 },
+  { title: 'Usuários', url: '/usuarios', icon: Shield, adminOnly: true },
 ];
 
 export function AppSidebar() {
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
 
   return (
     <Sidebar className="border-r border-border bg-sidebar">
@@ -45,7 +47,9 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {menuItems
+                .filter((item) => !('adminOnly' in item) || isAdmin)
+                .map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink

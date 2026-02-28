@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: { name: string; email: string } | null;
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
+  user: { id: string; email: string; role: 'admin' | 'user' } | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -16,37 +19,60 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('gps_auth') === 'true';
-  });
+  const [user, setUser] = useState<AuthContextType['user']>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [user, setUser] = useState<{ name: string; email: string } | null>(() => {
-    const saved = localStorage.getItem('gps_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-
-  const login = (email: string, password: string) => {
-    // Mock login
-    if (email && password.length >= 4) {
-      const u = { name: 'Administrador', email };
-      setIsAuthenticated(true);
-      setUser(u);
-      localStorage.setItem('gps_auth', 'true');
-      localStorage.setItem('gps_user', JSON.stringify(u));
-      return true;
-    }
-    return false;
+  const fetchRole = async (userId: string): Promise<'admin' | 'user'> => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+    const roles = data?.map((r: any) => r.role) || [];
+    return roles.includes('admin') ? 'admin' : 'user';
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const role = await fetchRole(session.user.id);
+        setUser({ id: session.user.id, email: session.user.email!, role });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const role = await fetchRole(session.user.id);
+        setUser({ id: session.user.id, email: session.user.email!, role });
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('gps_auth');
-    localStorage.removeItem('gps_user');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{
+      isAuthenticated: !!user,
+      user,
+      loading,
+      login,
+      logout,
+      isAdmin: user?.role === 'admin',
+    }}>
       {children}
     </AuthContext.Provider>
   );
