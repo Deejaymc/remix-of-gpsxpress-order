@@ -16,24 +16,24 @@ const Clients = () => {
 
   const filtered = clients.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.cpfCnpj.includes(search)
+    c.nif.includes(search)
   );
 
   const handleSave = () => {
-    if (!form.name || !form.cpfCnpj) return;
+    if (!form.name || !form.nif) return;
     if (editing) {
       setClients(clients.map(c => c.id === editing.id ? { ...c, ...form } as Client : c));
     } else {
       const newClient: Client = {
         id: crypto.randomUUID(),
         name: form.name || '',
-        cpfCnpj: form.cpfCnpj || '',
+        nif: form.nif || '',
         phone: form.phone || '',
         email: form.email || '',
         address: form.address || '',
-        city: form.city || '',
-        state: form.state || '',
-        zipCode: form.zipCode || '',
+        provincia: form.provincia || '',
+        municipio: form.municipio || '',
+        rua: form.rua || '',
         createdAt: new Date().toISOString(),
       };
       setClients([...clients, newClient]);
@@ -73,13 +73,13 @@ const Clients = () => {
             </DialogHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input placeholder="Nome *" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} className="bg-secondary" />
-              <Input placeholder="CPF/CNPJ *" value={form.cpfCnpj || ''} onChange={e => setForm({...form, cpfCnpj: e.target.value})} className="bg-secondary" />
+              <Input placeholder="NIF *" value={form.nif || ''} onChange={e => setForm({...form, nif: e.target.value})} className="bg-secondary" />
               <Input placeholder="Telefone" value={form.phone || ''} onChange={e => setForm({...form, phone: e.target.value})} className="bg-secondary" />
               <Input placeholder="E-mail" value={form.email || ''} onChange={e => setForm({...form, email: e.target.value})} className="bg-secondary" />
               <Input placeholder="Endereço" value={form.address || ''} onChange={e => setForm({...form, address: e.target.value})} className="bg-secondary col-span-full" />
-              <Input placeholder="Cidade" value={form.city || ''} onChange={e => setForm({...form, city: e.target.value})} className="bg-secondary" />
-              <Input placeholder="Estado" value={form.state || ''} onChange={e => setForm({...form, state: e.target.value})} className="bg-secondary" />
-              <Input placeholder="CEP" value={form.zipCode || ''} onChange={e => setForm({...form, zipCode: e.target.value})} className="bg-secondary" />
+              <Input placeholder="Provincia" value={form.provincia || ''} onChange={e => setForm({...form, provincia: e.target.value})} className="bg-secondary" />
+              <Input placeholder="Municipio" value={form.municipio || ''} onChange={e => setForm({...form, municipio: e.target.value})} className="bg-secondary" />
+              <Input placeholder="Rua" value={form.rua || ''} onChange={e => setForm({...form, rua: e.target.value})} className="bg-secondary" />
             </div>
             <Button onClick={handleSave} className="w-full mt-2 glow-primary font-display tracking-wider">SALVAR</Button>
           </DialogContent>
@@ -97,9 +97,9 @@ const Clients = () => {
             <thead>
               <tr className="border-b border-border text-muted-foreground bg-secondary/50">
                 <th className="text-left py-3 px-4">Nome</th>
-                <th className="text-left py-3 px-4">CPF/CNPJ</th>
+                <th className="text-left py-3 px-4">NIF</th>
                 <th className="text-left py-3 px-4 hidden md:table-cell">Telefone</th>
-                <th className="text-left py-3 px-4 hidden md:table-cell">Cidade</th>
+                <th className="text-left py-3 px-4 hidden md:table-cell">Provincia</th>
                 <th className="text-right py-3 px-4">Ações</th>
               </tr>
             </thead>
@@ -109,9 +109,9 @@ const Clients = () => {
               ) : filtered.map(c => (
                 <tr key={c.id} className="border-b border-border/50 hover:bg-secondary/30">
                   <td className="py-3 px-4 font-medium">{c.name}</td>
-                  <td className="py-3 px-4 text-muted-foreground">{c.cpfCnpj}</td>
+                  <td className="py-3 px-4 text-muted-foreground">{c.nif}</td>
                   <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{c.phone}</td>
-                  <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{c.city}/{c.state}</td>
+                  <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{c.provincia}/{c.municipio}</td>
                   <td className="py-3 px-4 text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}><Edit className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>

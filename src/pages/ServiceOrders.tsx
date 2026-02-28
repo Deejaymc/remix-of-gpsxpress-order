@@ -15,7 +15,7 @@ const ServiceOrders = () => {
   const [clients] = useLocalStorage<Client[]>('gps_clients', []);
   const [products] = useLocalStorage<Product[]>('gps_products', []);
   const [technicians] = useLocalStorage<Technician[]>('gps_technicians', []);
-  const [company] = useLocalStorage<CompanyInfo>('gps_company', { name: 'GPSXPRESS', cnpj: '', ie: '', address: '', city: '', state: '', zipCode: '', phone: '', email: '', website: '' });
+  const [company] = useLocalStorage<CompanyInfo>('gps_company', { name: 'GPSXPRESS', nif: '', ie: '', address: '', provincia: '', municipio: '', rua: '', phone: '', email: '', website: '' });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [open, setOpen] = useState(false);

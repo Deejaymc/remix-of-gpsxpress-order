@@ -1,13 +1,13 @@
 export interface Client {
   id: string;
   name: string;
-  cpfCnpj: string;
+  nif: string;
   phone: string;
   email: string;
   address: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  provincia: string;
+  municipio: string;
+  rua: string;
   createdAt: string;
 }
 
@@ -53,12 +53,12 @@ export interface ServiceOrder {
 
 export interface CompanyInfo {
   name: string;
-  cnpj: string;
+  nif: string;
   ie: string;
   address: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  provincia: string;
+  municipio: string;
+  rua: string;
   phone: string;
   email: string;
   website: string;
