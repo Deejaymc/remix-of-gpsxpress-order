@@ -120,7 +120,7 @@ const ServiceOrders = () => {
                     <SelectItem value="high">Alta</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input placeholder="Valor R$" type="number" value={form.value || ''} onChange={e => setForm({...form, value: Number(e.target.value)})} className="bg-secondary" />
+                <Input placeholder="Valor Ao" type="number" value={form.value || ''} onChange={e => setForm({...form, value: Number(e.target.value)})} className="bg-secondary" />
                 <Textarea placeholder="Descrição do serviço *" value={form.description || ''} onChange={e => setForm({...form, description: e.target.value})} className="bg-secondary col-span-full" />
                 <Textarea placeholder="Diagnóstico" value={form.diagnosis || ''} onChange={e => setForm({...form, diagnosis: e.target.value})} className="bg-secondary col-span-full" />
                 <Textarea placeholder="Solução" value={form.solution || ''} onChange={e => setForm({...form, solution: e.target.value})} className="bg-secondary col-span-full" />
@@ -179,7 +179,7 @@ const ServiceOrders = () => {
                       {o.status === 'open' ? 'Aberta' : o.status === 'in_progress' ? 'Em Andamento' : o.status === 'completed' ? 'Concluída' : 'Cancelada'}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right hidden sm:table-cell">R$ {o.value?.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-right hidden sm:table-cell">Ao {o.value?.toFixed(2)}</td>
                   <td className="py-3 px-4 text-right whitespace-nowrap">
                     <Button variant="ghost" size="icon" onClick={() => exportSinglePDF(o)} title="PDF"><FileDown className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(o)}><Edit className="h-4 w-4" /></Button>

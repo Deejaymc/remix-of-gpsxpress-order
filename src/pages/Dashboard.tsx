@@ -18,7 +18,7 @@ const Dashboard = () => {
     { label: 'Ordens Abertas', value: openOrders, icon: Clock, color: 'text-warning' },
     { label: 'Em Andamento', value: inProgress, icon: TrendingUp, color: 'text-primary' },
     { label: 'Concluídas', value: completed, icon: CheckCircle, color: 'text-success' },
-    { label: 'Faturamento', value: `R$ ${totalValue.toFixed(2)}`, icon: TrendingUp, color: 'text-primary' },
+    { label: 'Faturamento', value: `Ao ${totalValue.toFixed(2)}`, icon: TrendingUp, color: 'text-primary' },
   ];
 
   const cards = [
@@ -93,7 +93,7 @@ const Dashboard = () => {
                         {o.status === 'open' ? 'Aberta' : o.status === 'in_progress' ? 'Em Andamento' : o.status === 'completed' ? 'Concluída' : 'Cancelada'}
                       </span>
                     </td>
-                    <td className="py-2 px-2 text-right">R$ {o.value?.toFixed(2)}</td>
+                    <td className="py-2 px-2 text-right">Ao {o.value?.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

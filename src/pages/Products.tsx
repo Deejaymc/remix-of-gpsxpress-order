@@ -97,7 +97,7 @@ const Products = () => {
                   <td className="py-3 px-4 font-medium">{p.name}</td>
                   <td className="py-3 px-4 text-muted-foreground">{p.brand}</td>
                   <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{p.model}</td>
-                  <td className="py-3 px-4 text-right">R$ {p.price?.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-right">Ao {p.price?.toFixed(2)}</td>
                   <td className="py-3 px-4 text-right">{p.stock}</td>
                   <td className="py-3 px-4 text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(p)}><Edit className="h-4 w-4" /></Button>

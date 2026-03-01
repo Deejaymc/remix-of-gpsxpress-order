@@ -222,7 +222,7 @@ export function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo) {
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.accent);
-  doc.text(`R$ ${o.value?.toFixed(2) || '0.00'}`, 192, y + 12, { align: 'right' });
+  doc.text(`Ao ${o.value?.toFixed(2) || '0.00'}`, 192, y + 12, { align: 'right' });
 
   // Signature area
   const sigY = y + 36;
@@ -272,7 +272,7 @@ export function exportOrdersReportPDF(orders: ServiceOrder[], company: CompanyIn
     { label: 'Abertas', value: String(open), color: COLORS.warning },
     { label: 'Em Andamento', value: String(inProgress), color: COLORS.blue },
     { label: 'Concluídas', value: String(completed), color: COLORS.success },
-    { label: 'Faturamento', value: `R$ ${total.toFixed(2)}`, color: COLORS.accent },
+    { label: 'Faturamento', value: `Ao ${total.toFixed(2)}`, color: COLORS.accent },
   ];
 
   summaryData.forEach((card, i) => {
@@ -298,14 +298,14 @@ export function exportOrdersReportPDF(orders: ServiceOrder[], company: CompanyIn
   // Table
   autoTable(doc, {
     startY: y + 20,
-    head: [['Nº', 'Cliente', 'Técnico', 'Status', 'Prioridade', 'Valor (R$)']],
+    head: [['Nº', 'Cliente', 'Técnico', 'Status', 'Prioridade', 'Valor (Ao)']],
     body: orders.map(o => [
       `#${o.number}`,
       o.clientName,
       o.technicianName || '—',
       statusConfig[o.status].label,
       priorityConfig[o.priority].label,
-      `R$ ${o.value?.toFixed(2) || '0.00'}`,
+      `Ao ${o.value?.toFixed(2) || '0.00'}`,
     ]),
     styles: { fontSize: 8, cellPadding: 3, textColor: COLORS.textDark },
     headStyles: {
@@ -319,7 +319,7 @@ export function exportOrdersReportPDF(orders: ServiceOrder[], company: CompanyIn
       0: { cellWidth: 18, fontStyle: 'bold', textColor: COLORS.accent },
       5: { halign: 'right', fontStyle: 'bold' },
     },
-    foot: [['', '', '', '', 'TOTAL', `R$ ${total.toFixed(2)}`]],
+    foot: [['', '', '', '', 'TOTAL', `Ao ${total.toFixed(2)}`]],
     footStyles: {
       fillColor: COLORS.dark,
       textColor: COLORS.accent,
