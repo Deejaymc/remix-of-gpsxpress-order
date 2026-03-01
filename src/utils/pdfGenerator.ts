@@ -147,19 +147,25 @@ export function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo) {
   // Document title bar
   let y = 42;
   doc.setFillColor(...COLORS.lightGray);
-  doc.roundedRect(14, y, 182, 12, 2, 2, 'F');
+  doc.roundedRect(14, y, 182, 18, 2, 2, 'F');
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.textDark);
-  doc.text(`ORDEM DE SERVIÇO`, 20, y + 8);
+  doc.text(`ORDEM DE SERVIÇO`, 20, y + 7);
   
   doc.setFontSize(12);
   doc.setTextColor(...COLORS.accent);
-  doc.text(`#${o.number}`, 85, y + 8);
+  doc.text(`#${o.number}`, 85, y + 7);
+
+  // Client name in header
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...COLORS.textMuted);
+  doc.text(`Cliente: ${o.clientName}`, 20, y + 14);
 
   // Status badge
-  drawStatusBadge(doc, o.status, 150, y + 8);
+  drawStatusBadge(doc, o.status, 150, y + 7);
 
   // Info grid
   y = 60;
