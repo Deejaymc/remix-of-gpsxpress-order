@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Technician } from '@/types';
+import { useTechnicians, DbTechnician } from '@/hooks/useTechnicians';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,39 +7,36 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Search, Trash2, Edit } from 'lucide-react';
 
 const Technicians = () => {
-  const [technicians, setTechnicians] = useLocalStorage<Technician[]>('gps_technicians', []);
+  const { technicians, addTechnician, updateTechnician, deleteTechnician } = useTechnicians();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Technician | null>(null);
-  const [form, setForm] = useState<Partial<Technician>>({});
+  const [editing, setEditing] = useState<DbTechnician | null>(null);
+  const [form, setForm] = useState<Partial<DbTechnician>>({});
 
   const filtered = technicians.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name) return;
     if (editing) {
-      setTechnicians(technicians.map(t => t.id === editing.id ? { ...t, ...form } as Technician : t));
+      await updateTechnician(editing.id, form);
     } else {
-      const newTech: Technician = {
-        id: crypto.randomUUID(),
+      await addTechnician({
         name: form.name || '',
         phone: form.phone || '',
         email: form.email || '',
         specialty: form.specialty || '',
         active: true,
-        createdAt: new Date().toISOString(),
-      };
-      setTechnicians([...technicians, newTech]);
+      });
     }
     setForm({});
     setEditing(null);
     setOpen(false);
   };
 
-  const handleEdit = (t: Technician) => { setForm(t); setEditing(t); setOpen(true); };
-  const handleDelete = (id: string) => setTechnicians(technicians.filter(t => t.id !== id));
+  const handleEdit = (t: DbTechnician) => { setForm(t); setEditing(t); setOpen(true); };
+  const handleDelete = (id: string) => deleteTechnician(id);
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,10 @@
 import { useState } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { ServiceOrder, Client, Product, Technician, CompanyInfo } from '@/types';
+import { useServiceOrders } from '@/hooks/useServiceOrders';
+import { useClients } from '@/hooks/useClients';
+import { useProducts } from '@/hooks/useProducts';
+import { useTechnicians } from '@/hooks/useTechnicians';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { ServiceOrder } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,11 +15,11 @@ import { Plus, Search, Trash2, Edit, FileDown } from 'lucide-react';
 import { exportSingleOrderPDF, exportOrdersReportPDF } from '@/utils/pdfGenerator';
 
 const ServiceOrders = () => {
-  const [orders, setOrders] = useLocalStorage<ServiceOrder[]>('gps_orders', []);
-  const [clients] = useLocalStorage<Client[]>('gps_clients', []);
-  const [products] = useLocalStorage<Product[]>('gps_products', []);
-  const [technicians] = useLocalStorage<Technician[]>('gps_technicians', []);
-  const [company] = useLocalStorage<CompanyInfo>('gps_company', { name: 'GPSXPRESS', nif: '', ie: '', address: '', provincia: '', municipio: '', rua: '', phone: '', email: '', website: '' });
+  const { orders, addOrder, updateOrder, deleteOrder } = useServiceOrders();
+  const { clients } = useClients();
+  const { products } = useProducts();
+  const { technicians } = useTechnicians();
+  const { company } = useCompanySettings();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [open, setOpen] = useState(false);
@@ -28,23 +32,21 @@ const ServiceOrders = () => {
     return matchSearch && matchStatus;
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.clientId || !form.description) return;
     const client = clients.find(c => c.id === form.clientId);
     const tech = technicians.find(t => t.id === form.technicianId);
     const prod = products.find(p => p.id === form.productId);
 
     if (editing) {
-      setOrders(orders.map(o => o.id === editing.id ? {
-        ...o, ...form,
-        clientName: client?.name || o.clientName,
-        technicianName: tech?.name || o.technicianName,
-        productName: prod?.name || o.productName,
-      } as ServiceOrder : o));
+      await updateOrder(editing.id, {
+        ...form,
+        clientName: client?.name || editing.clientName,
+        technicianName: tech?.name || editing.technicianName,
+        productName: prod?.name || editing.productName,
+      });
     } else {
-      const newOrder: ServiceOrder = {
-        id: crypto.randomUUID(),
-        number: String(orders.length + 1).padStart(5, '0'),
+      await addOrder({
         clientId: form.clientId || '',
         clientName: client?.name || '',
         technicianId: form.technicianId || '',
@@ -54,12 +56,10 @@ const ServiceOrders = () => {
         description: form.description || '',
         diagnosis: form.diagnosis || '',
         solution: form.solution || '',
-        status: form.status as ServiceOrder['status'] || 'open',
-        priority: form.priority as ServiceOrder['priority'] || 'medium',
+        status: form.status || 'open',
+        priority: form.priority || 'medium',
         value: form.value || 0,
-        createdAt: new Date().toISOString(),
-      };
-      setOrders([...orders, newOrder]);
+      });
     }
     setForm({ status: 'open', priority: 'medium' });
     setEditing(null);
@@ -67,7 +67,7 @@ const ServiceOrders = () => {
   };
 
   const handleEdit = (o: ServiceOrder) => { setForm(o); setEditing(o); setOpen(true); };
-  const handleDelete = (id: string) => setOrders(orders.filter(o => o.id !== id));
+  const handleDelete = (id: string) => deleteOrder(id);
 
   const exportPDF = () => exportOrdersReportPDF(filtered, company);
   const exportSinglePDF = (o: ServiceOrder) => exportSingleOrderPDF(o, company);

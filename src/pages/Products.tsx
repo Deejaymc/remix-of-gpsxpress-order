@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Product } from '@/types';
+import { useProducts, DbProduct } from '@/hooks/useProducts';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,41 +7,38 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Search, Trash2, Edit } from 'lucide-react';
 
 const Products = () => {
-  const [products, setProducts] = useLocalStorage<Product[]>('gps_products', []);
+  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Product | null>(null);
-  const [form, setForm] = useState<Partial<Product>>({});
+  const [editing, setEditing] = useState<DbProduct | null>(null);
+  const [form, setForm] = useState<Partial<DbProduct>>({});
 
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.brand.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name) return;
     if (editing) {
-      setProducts(products.map(p => p.id === editing.id ? { ...p, ...form } as Product : p));
+      await updateProduct(editing.id, form);
     } else {
-      const newProduct: Product = {
-        id: crypto.randomUUID(),
+      await addProduct({
         name: form.name || '',
         description: form.description || '',
         brand: form.brand || '',
         model: form.model || '',
         price: form.price || 0,
         stock: form.stock || 0,
-        createdAt: new Date().toISOString(),
-      };
-      setProducts([...products, newProduct]);
+      });
     }
     setForm({});
     setEditing(null);
     setOpen(false);
   };
 
-  const handleEdit = (p: Product) => { setForm(p); setEditing(p); setOpen(true); };
-  const handleDelete = (id: string) => setProducts(products.filter(p => p.id !== id));
+  const handleEdit = (p: DbProduct) => { setForm(p); setEditing(p); setOpen(true); };
+  const handleDelete = (id: string) => deleteProduct(id);
 
   return (
     <div className="space-y-6">
@@ -97,7 +93,7 @@ const Products = () => {
                   <td className="py-3 px-4 font-medium">{p.name}</td>
                   <td className="py-3 px-4 text-muted-foreground">{p.brand}</td>
                   <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{p.model}</td>
-                  <td className="py-3 px-4 text-right">Ao {p.price?.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-right">Ao {Number(p.price).toFixed(2)}</td>
                   <td className="py-3 px-4 text-right">{p.stock}</td>
                   <td className="py-3 px-4 text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(p)}><Edit className="h-4 w-4" /></Button>

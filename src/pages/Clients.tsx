@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Client } from '@/types';
+import { useClients, DbClient } from '@/hooks/useClients';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,24 +7,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Search, Trash2, Edit } from 'lucide-react';
 
 const Clients = () => {
-  const [clients, setClients] = useLocalStorage<Client[]>('gps_clients', []);
+  const { clients, addClient, updateClient, deleteClient } = useClients();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Client | null>(null);
-  const [form, setForm] = useState<Partial<Client>>({});
+  const [editing, setEditing] = useState<DbClient | null>(null);
+  const [form, setForm] = useState<Partial<DbClient>>({});
 
   const filtered = clients.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.nif.includes(search)
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name || !form.nif) return;
     if (editing) {
-      setClients(clients.map(c => c.id === editing.id ? { ...c, ...form } as Client : c));
+      await updateClient(editing.id, form);
     } else {
-      const newClient: Client = {
-        id: crypto.randomUUID(),
+      await addClient({
         name: form.name || '',
         nif: form.nif || '',
         phone: form.phone || '',
@@ -34,24 +32,15 @@ const Clients = () => {
         provincia: form.provincia || '',
         municipio: form.municipio || '',
         rua: form.rua || '',
-        createdAt: new Date().toISOString(),
-      };
-      setClients([...clients, newClient]);
+      });
     }
     setForm({});
     setEditing(null);
     setOpen(false);
   };
 
-  const handleEdit = (c: Client) => {
-    setForm(c);
-    setEditing(c);
-    setOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    setClients(clients.filter(c => c.id !== id));
-  };
+  const handleEdit = (c: DbClient) => { setForm(c); setEditing(c); setOpen(true); };
+  const handleDelete = (id: string) => deleteClient(id);
 
   return (
     <div className="space-y-6">

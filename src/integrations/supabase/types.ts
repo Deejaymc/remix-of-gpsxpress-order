@@ -14,6 +14,250 @@ export type Database = {
   }
   public: {
     Tables: {
+      clients: {
+        Row: {
+          address: string
+          created_at: string
+          email: string
+          id: string
+          municipio: string
+          name: string
+          nif: string
+          phone: string
+          provincia: string
+          rua: string
+          user_id: string
+        }
+        Insert: {
+          address?: string
+          created_at?: string
+          email?: string
+          id?: string
+          municipio?: string
+          name: string
+          nif?: string
+          phone?: string
+          provincia?: string
+          rua?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          email?: string
+          id?: string
+          municipio?: string
+          name?: string
+          nif?: string
+          phone?: string
+          provincia?: string
+          rua?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      company_settings: {
+        Row: {
+          address: string
+          created_at: string
+          email: string
+          id: string
+          ie: string
+          municipio: string
+          name: string
+          nif: string
+          phone: string
+          provincia: string
+          rua: string
+          updated_at: string
+          user_id: string
+          website: string
+        }
+        Insert: {
+          address?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ie?: string
+          municipio?: string
+          name?: string
+          nif?: string
+          phone?: string
+          provincia?: string
+          rua?: string
+          updated_at?: string
+          user_id: string
+          website?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ie?: string
+          municipio?: string
+          name?: string
+          nif?: string
+          phone?: string
+          provincia?: string
+          rua?: string
+          updated_at?: string
+          user_id?: string
+          website?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          brand: string
+          created_at: string
+          description: string
+          id: string
+          model: string
+          name: string
+          price: number
+          stock: number
+          user_id: string
+        }
+        Insert: {
+          brand?: string
+          created_at?: string
+          description?: string
+          id?: string
+          model?: string
+          name: string
+          price?: number
+          stock?: number
+          user_id: string
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          description?: string
+          id?: string
+          model?: string
+          name?: string
+          price?: number
+          stock?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      service_orders: {
+        Row: {
+          client_id: string | null
+          client_name: string
+          completed_at: string | null
+          created_at: string
+          description: string
+          diagnosis: string
+          id: string
+          number: string
+          priority: string
+          product_id: string | null
+          product_name: string
+          solution: string
+          status: string
+          technician_id: string | null
+          technician_name: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          client_id?: string | null
+          client_name?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          diagnosis?: string
+          id?: string
+          number: string
+          priority?: string
+          product_id?: string | null
+          product_name?: string
+          solution?: string
+          status?: string
+          technician_id?: string | null
+          technician_name?: string
+          user_id: string
+          value?: number
+        }
+        Update: {
+          client_id?: string | null
+          client_name?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          diagnosis?: string
+          id?: string
+          number?: string
+          priority?: string
+          product_id?: string | null
+          product_name?: string
+          solution?: string
+          status?: string
+          technician_id?: string | null
+          technician_name?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technicians: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string
+          specialty: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name: string
+          phone?: string
+          specialty?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+          specialty?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

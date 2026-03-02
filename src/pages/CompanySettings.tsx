@@ -1,33 +1,19 @@
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { CompanyInfo } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
 import { Building2 } from 'lucide-react';
 
-const defaultCompany: CompanyInfo = {
-  name: 'GPSXPRESS',
-  nif: '',
-  ie: '',
-  address: '',
-  provincia: '',
-  municipio: '',
-  rua: '',
-  phone: '',
-  email: '',
-  website: '',
-};
-
 const CompanySettings = () => {
-  const [company, setCompany] = useLocalStorage<CompanyInfo>('gps_company', defaultCompany);
+  const { company, saveCompany, setCompany } = useCompanySettings();
 
   const handleChange = (field: keyof CompanyInfo, value: string) => {
     setCompany({ ...company, [field]: value });
   };
 
   const handleSave = () => {
-    toast.success('Dados da empresa salvos com sucesso!');
+    saveCompany(company);
   };
 
   return (
