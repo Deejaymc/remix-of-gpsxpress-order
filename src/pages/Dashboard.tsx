@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { ServiceOrder, CompanyInfo } from '@/types';
+import { useServiceOrders } from '@/hooks/useServiceOrders';
+import { useClients } from '@/hooks/useClients';
+import { useProducts } from '@/hooks/useProducts';
+import { useTechnicians } from '@/hooks/useTechnicians';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { ServiceOrder } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, Users, Package, Wrench, TrendingUp, Clock, CheckCircle, AlertTriangle, FileDown, Eye } from 'lucide-react';
+import { FileText, Users, Package, Wrench, TrendingUp, Clock, CheckCircle, FileDown, Eye } from 'lucide-react';
 import { exportSingleOrderPDF } from '@/utils/pdfGenerator';
 
 const statusLabels: Record<ServiceOrder['status'], string> = {
@@ -21,11 +25,11 @@ const priorityLabels: Record<ServiceOrder['priority'], string> = {
 };
 
 const Dashboard = () => {
-  const [orders] = useLocalStorage<ServiceOrder[]>('gps_orders', []);
-  const [clients] = useLocalStorage<any[]>('gps_clients', []);
-  const [products] = useLocalStorage<any[]>('gps_products', []);
-  const [technicians] = useLocalStorage<any[]>('gps_technicians', []);
-  const [company] = useLocalStorage<CompanyInfo>('gps_company', { name: 'GPSXPRESS', nif: '', ie: '', address: '', provincia: '', municipio: '', rua: '', phone: '', email: '', website: '' });
+  const { orders } = useServiceOrders();
+  const { clients } = useClients();
+  const { products } = useProducts();
+  const { technicians } = useTechnicians();
+  const { company } = useCompanySettings();
   const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null);
 
   const openOrders = orders.filter(o => o.status === 'open').length;
@@ -47,7 +51,7 @@ const Dashboard = () => {
     { label: 'Total OS', value: orders.length, icon: FileText },
   ];
 
-  const recentOrders = orders.slice(-5).reverse();
+  const recentOrders = [...orders].slice(0, 5);
 
   const statusClass = (status: ServiceOrder['status']) =>
     status === 'open' ? 'bg-warning/20 text-warning' :
@@ -61,7 +65,6 @@ const Dashboard = () => {
         DASH<span className="text-primary">BOARD</span>
       </h1>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
           <Card key={s.label} className="p-4 bg-card border-border hover:glow-primary transition-shadow">
@@ -76,7 +79,6 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Quick cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (
           <Card key={c.label} className="p-4 bg-card border-border text-center">
@@ -87,7 +89,6 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Recent orders */}
       <Card className="p-4 bg-card border-border">
         <h2 className="font-display text-sm tracking-wider text-muted-foreground mb-4">ÚLTIMAS ORDENS DE SERVIÇO</h2>
         {recentOrders.length === 0 ? (
@@ -126,7 +127,6 @@ const Dashboard = () => {
         )}
       </Card>
 
-      {/* Order detail dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
         <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
           {selectedOrder && (
@@ -145,7 +145,6 @@ const Dashboard = () => {
                     Prioridade: {priorityLabels[selectedOrder.priority]}
                   </span>
                 </div>
-
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider">Cliente</p>
@@ -164,7 +163,6 @@ const Dashboard = () => {
                     <p className="font-medium">{new Date(selectedOrder.createdAt).toLocaleDateString('pt-BR')}</p>
                   </div>
                 </div>
-
                 {selectedOrder.description && (
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Descrição</p>
@@ -183,7 +181,6 @@ const Dashboard = () => {
                     <p className="text-foreground">{selectedOrder.solution}</p>
                   </div>
                 )}
-
                 <div className="flex items-center justify-between pt-2 border-t border-border">
                   <p className="font-display text-lg font-bold text-primary">Ao {selectedOrder.value?.toFixed(2)}</p>
                   <Button variant="outline" size="sm" onClick={() => exportSingleOrderPDF(selectedOrder, company)}>
