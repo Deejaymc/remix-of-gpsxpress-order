@@ -32,25 +32,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
+    // Use onAuthStateChange which handles INITIAL_SESSION automatically
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
       if (session?.user) {
-        const role = await fetchRole(session.user.id);
-        setUser({ id: session.user.id, email: session.user.email!, role });
+        // Use setTimeout to avoid Supabase auth deadlock
+        setTimeout(async () => {
+          if (!mounted) return;
+          try {
+            const role = await fetchRole(session.user.id);
+            if (mounted) {
+              setUser({ id: session.user.id, email: session.user.email!, role });
+              setLoading(false);
+            }
+          } catch {
+            if (mounted) {
+              setUser({ id: session.user.id, email: session.user.email!, role: 'user' });
+              setLoading(false);
+            }
+          }
+        }, 0);
       } else {
         setUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const role = await fetchRole(session.user.id);
-        setUser({ id: session.user.id, email: session.user.email!, role });
+    // Safety timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (mounted && loading) {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    }, 5000);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
