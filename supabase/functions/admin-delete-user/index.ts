@@ -5,6 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -16,7 +18,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Não autenticado");
     const token = authHeader.replace("Bearer ", "");
     const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
     if (!caller) throw new Error("Não autenticado");
@@ -31,7 +34,12 @@ Deno.serve(async (req) => {
     if (!callerRole) throw new Error("Sem permissão de administrador");
 
     const { userId } = await req.json();
-    if (!userId) throw new Error("ID do usuário é obrigatório");
+
+    // Validate userId format
+    if (!userId || typeof userId !== "string" || !UUID_REGEX.test(userId)) {
+      throw new Error("ID do usuário inválido");
+    }
+
     if (userId === caller.id) throw new Error("Não pode remover a si mesmo");
 
     const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
