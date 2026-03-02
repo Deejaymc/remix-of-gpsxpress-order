@@ -5,6 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -17,7 +20,8 @@ Deno.serve(async (req) => {
     );
 
     // Verify caller is admin
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Não autenticado");
     const token = authHeader.replace("Bearer ", "");
     const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
     if (!caller) throw new Error("Não autenticado");
@@ -32,11 +36,25 @@ Deno.serve(async (req) => {
     if (!callerRole) throw new Error("Sem permissão de administrador");
 
     const { email, password, role } = await req.json();
-    if (!email || !password) throw new Error("Email e senha são obrigatórios");
+
+    // Validate email
+    if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
+      throw new Error("Formato de email inválido");
+    }
+
+    // Validate password
+    if (!password || typeof password !== "string" || password.length < 8) {
+      throw new Error("Senha deve ter no mínimo 8 caracteres");
+    }
+
+    // Validate role
+    if (role && !["admin", "user"].includes(role)) {
+      throw new Error("Papel inválido");
+    }
 
     // Create user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: email.trim(),
       password,
       email_confirm: true,
     });
