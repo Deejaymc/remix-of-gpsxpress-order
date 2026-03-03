@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Search, Trash2, Edit, FileDown } from 'lucide-react';
+import { Plus, Search, Trash2, Edit, FileDown, CheckCircle } from 'lucide-react';
 import { exportSingleOrderPDF, exportOrdersReportPDF } from '@/utils/pdfGenerator';
 
 const ServiceOrders = () => {
@@ -184,6 +184,11 @@ const ServiceOrders = () => {
                   </td>
                   <td className="py-3 px-4 text-right hidden sm:table-cell">Ao {o.value?.toFixed(2)}</td>
                   <td className="py-3 px-4 text-right whitespace-nowrap">
+                    {o.status !== 'completed' && o.status !== 'cancelled' && (
+                      <Button variant="ghost" size="icon" onClick={() => updateOrder(o.id, { status: 'completed' })} title="Finalizar" className="text-success">
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => exportSinglePDF(o)} title="PDF"><FileDown className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(o)}><Edit className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(o.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>

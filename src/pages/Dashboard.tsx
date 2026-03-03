@@ -25,7 +25,7 @@ const priorityLabels: Record<ServiceOrder['priority'], string> = {
 };
 
 const Dashboard = () => {
-  const { orders } = useServiceOrders();
+  const { orders, updateOrder } = useServiceOrders();
   const { clients } = useClients();
   const { products } = useProducts();
   const { technicians } = useTechnicians();
@@ -183,12 +183,22 @@ const Dashboard = () => {
                 )}
                 <div className="flex items-center justify-between pt-2 border-t border-border">
                   <p className="font-display text-lg font-bold text-primary">Ao {selectedOrder.value?.toFixed(2)}</p>
-                  <Button variant="outline" size="sm" onClick={() => {
-                    const client = clients.find(c => c.id === selectedOrder.clientId);
-                    exportSingleOrderPDF(selectedOrder, company, client);
-                  }}>
-                    <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
-                  </Button>
+                  <div className="flex gap-2">
+                    {selectedOrder.status !== 'completed' && selectedOrder.status !== 'cancelled' && (
+                      <Button variant="default" size="sm" onClick={async () => {
+                        await updateOrder(selectedOrder.id, { status: 'completed' });
+                        setSelectedOrder(null);
+                      }}>
+                        <CheckCircle className="h-4 w-4 mr-1" /> Finalizar
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => {
+                      const client = clients.find(c => c.id === selectedOrder.clientId);
+                      exportSingleOrderPDF(selectedOrder, company, client);
+                    }}>
+                      <FileDown className="h-4 w-4 mr-1" /> PDF
+                    </Button>
+                  </div>
                 </div>
               </div>
             </>
