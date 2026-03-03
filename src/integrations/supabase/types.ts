@@ -63,6 +63,7 @@ export type Database = {
           email: string
           id: string
           ie: string
+          logo_url: string | null
           municipio: string
           name: string
           nif: string
@@ -79,6 +80,7 @@ export type Database = {
           email?: string
           id?: string
           ie?: string
+          logo_url?: string | null
           municipio?: string
           name?: string
           nif?: string
@@ -95,6 +97,7 @@ export type Database = {
           email?: string
           id?: string
           ie?: string
+          logo_url?: string | null
           municipio?: string
           name?: string
           nif?: string

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { CompanyInfo } from '@/types';
 
 const defaultCompany: CompanyInfo = {
-  name: 'GPSXPRESS', nif: '', ie: '', address: '', provincia: '', municipio: '', rua: '', phone: '', email: '', website: '',
+  name: 'GPSXPRESS', nif: '', ie: '', address: '', provincia: '', municipio: '', rua: '', phone: '', email: '', website: '', logoUrl: '',
 };
 
 export function useCompanySettings() {
@@ -20,7 +20,7 @@ export function useCompanySettings() {
     if (error) { toast.error('Erro ao carregar dados da empresa'); }
     if (data) {
       setDbId(data.id);
-      setCompany({ name: data.name, nif: data.nif, ie: data.ie, address: data.address, provincia: data.provincia, municipio: data.municipio, rua: data.rua, phone: data.phone, email: data.email, website: data.website });
+      setCompany({ name: data.name, nif: data.nif, ie: data.ie, address: data.address, provincia: data.provincia, municipio: data.municipio, rua: data.rua, phone: data.phone, email: data.email, website: data.website, logoUrl: data.logo_url || '' });
     }
     setLoading(false);
   }, [user]);
@@ -30,10 +30,12 @@ export function useCompanySettings() {
   const saveCompany = async (info: CompanyInfo) => {
     if (!user) return;
     if (dbId) {
-      const { error } = await supabase.from('company_settings').update({ ...info, updated_at: new Date().toISOString() }).eq('id', dbId);
+      const { logoUrl, ...rest } = info;
+      const { error } = await supabase.from('company_settings').update({ ...rest, logo_url: logoUrl, updated_at: new Date().toISOString() }).eq('id', dbId);
       if (error) { toast.error('Erro ao salvar dados'); return; }
     } else {
-      const { error } = await supabase.from('company_settings').insert({ ...info, user_id: user.id });
+      const { logoUrl, ...rest } = info;
+      const { error } = await supabase.from('company_settings').insert({ ...rest, logo_url: logoUrl, user_id: user.id });
       if (error) { toast.error('Erro ao salvar dados'); return; }
     }
     toast.success('Dados da empresa salvos com sucesso!');

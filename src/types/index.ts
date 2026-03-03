@@ -62,4 +62,5 @@ export interface CompanyInfo {
   phone: string;
   email: string;
   website: string;
+  logoUrl?: string;
 }
