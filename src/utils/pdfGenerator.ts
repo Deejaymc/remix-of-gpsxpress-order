@@ -32,7 +32,22 @@ const priorityConfig = {
   high: { label: 'Alta', color: COLORS.danger },
 };
 
-function drawHeader(doc: jsPDF, company: CompanyInfo) {
+async function loadImage(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+function drawHeader(doc: jsPDF, company: CompanyInfo, logoDataUrl?: string | null) {
   // Top accent line
   doc.setFillColor(...COLORS.accent);
   doc.rect(0, 0, 210, 3, 'F');
@@ -41,16 +56,28 @@ function drawHeader(doc: jsPDF, company: CompanyInfo) {
   doc.setFillColor(...COLORS.dark);
   doc.rect(0, 3, 210, 32, 'F');
 
+  let textStartX = 14;
+
+  // Logo
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, 'PNG', 14, 6, 24, 24);
+      textStartX = 42;
+    } catch {
+      // fallback: no logo
+    }
+  }
+
   // Company name
   doc.setTextColor(...COLORS.white);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text(company.name || 'GPSXPRESS', 14, 17);
+  doc.text(company.name || 'GPSXPRESS', textStartX, 17);
 
   // Tagline / subtitle
   doc.setFontSize(7);
   doc.setTextColor(...COLORS.accent);
-  doc.text('RASTREAMENTO & TECNOLOGIA', 14, 23);
+  doc.text('RASTREAMENTO & TECNOLOGIA', textStartX, 23);
 
   // Company details right side
   doc.setFontSize(7);
@@ -141,9 +168,10 @@ function drawInfoRow(doc: jsPDF, label: string, value: string, x: number, y: num
   doc.text(value || '—', x, y + 5);
 }
 
-export function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo, client?: DbClient) {
+export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo, client?: DbClient) {
   const doc = new jsPDF();
-  drawHeader(doc, company);
+  const logoDataUrl = company.logoUrl ? await loadImage(company.logoUrl) : null;
+  drawHeader(doc, company, logoDataUrl);
 
   // Document title bar
   let y = 42;
@@ -274,9 +302,10 @@ export function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo, clie
   doc.save(`os-${o.number}.pdf`);
 }
 
-export function exportOrdersReportPDF(orders: ServiceOrder[], company: CompanyInfo) {
+export async function exportOrdersReportPDF(orders: ServiceOrder[], company: CompanyInfo) {
   const doc = new jsPDF();
-  drawHeader(doc, company);
+  const logoDataUrl = company.logoUrl ? await loadImage(company.logoUrl) : null;
+  drawHeader(doc, company, logoDataUrl);
 
   // Title
   let y = 44;
