@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ServiceOrder, CompanyInfo } from '@/types';
+import { DbClient } from '@/hooks/useClients';
 
 const COLORS = {
   dark: [15, 23, 42] as [number, number, number],
@@ -140,7 +141,7 @@ function drawInfoRow(doc: jsPDF, label: string, value: string, x: number, y: num
   doc.text(value || '—', x, y + 5);
 }
 
-export function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo) {
+export function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo, client?: DbClient) {
   const doc = new jsPDF();
   drawHeader(doc, company);
 
@@ -167,22 +168,45 @@ export function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo) {
   // Status badge
   drawStatusBadge(doc, o.status, 150, y + 7);
 
-  // Info grid
-  y = 60;
+  // Client details section
+  y = 64;
+  y = drawSectionTitle(doc, 'DADOS DO CLIENTE', y);
+
+  doc.setDrawColor(...COLORS.borderLight);
+  doc.setLineWidth(0.2);
+  const clientBoxH = client ? 32 : 18;
+  doc.roundedRect(14, y, 182, clientBoxH, 2, 2, 'S');
+
+  if (client) {
+    drawInfoRow(doc, 'Nome', client.name, 20, y + 7);
+    drawInfoRow(doc, 'NIF', client.nif || '—', 85, y + 7);
+    drawInfoRow(doc, 'Telefone', client.phone || '—', 150, y + 7);
+
+    drawInfoRow(doc, 'Email', client.email || '—', 20, y + 20);
+    const enderecoCompleto = [client.rua, client.municipio, client.provincia].filter(Boolean).join(', ');
+    drawInfoRow(doc, 'Endereço', enderecoCompleto || client.address || '—', 85, y + 20);
+
+    // Vertical dividers
+    doc.setDrawColor(...COLORS.borderLight);
+    doc.line(80, y + 3, 80, y + 29);
+    doc.line(145, y + 3, 145, y + 12);
+  } else {
+    drawInfoRow(doc, 'Nome', o.clientName, 20, y + 7);
+  }
+
+  y += clientBoxH + 4;
+
+  // Order info grid
   doc.setDrawColor(...COLORS.borderLight);
   doc.setLineWidth(0.2);
   doc.roundedRect(14, y, 182, 32, 2, 2, 'S');
 
-  // Left column
-  drawInfoRow(doc, 'Cliente', o.clientName, 20, y + 7);
-  drawInfoRow(doc, 'Técnico', o.technicianName || '—', 20, y + 20);
-
-  // Center column
+  drawInfoRow(doc, 'Técnico', o.technicianName || '—', 20, y + 7);
   drawInfoRow(doc, 'Produto/Equipamento', o.productName || '—', 85, y + 7);
-  drawInfoRow(doc, 'Prioridade', priorityConfig[o.priority].label, 85, y + 20);
-
-  // Right column
   drawInfoRow(doc, 'Data de Abertura', new Date(o.createdAt).toLocaleDateString('pt-BR'), 150, y + 7);
+
+  drawInfoRow(doc, 'Prioridade', priorityConfig[o.priority].label, 20, y + 20);
+  drawInfoRow(doc, 'Valor', `Ao ${o.value?.toFixed(2) || '0.00'}`, 85, y + 20);
   if (o.completedAt) {
     drawInfoRow(doc, 'Data de Conclusão', new Date(o.completedAt).toLocaleDateString('pt-BR'), 150, y + 20);
   }
@@ -193,7 +217,7 @@ export function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo) {
   doc.line(145, y + 3, 145, y + 29);
 
   // Content sections
-  y = 98;
+  y += 38;
   const sections = [
     { title: 'DESCRIÇÃO DO SERVIÇO', content: o.description },
     { title: 'DIAGNÓSTICO TÉCNICO', content: o.diagnosis },

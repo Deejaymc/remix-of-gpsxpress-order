@@ -183,7 +183,10 @@ const Dashboard = () => {
                 )}
                 <div className="flex items-center justify-between pt-2 border-t border-border">
                   <p className="font-display text-lg font-bold text-primary">Ao {selectedOrder.value?.toFixed(2)}</p>
-                  <Button variant="outline" size="sm" onClick={() => exportSingleOrderPDF(selectedOrder, company)}>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    const client = clients.find(c => c.id === selectedOrder.clientId);
+                    exportSingleOrderPDF(selectedOrder, company, client);
+                  }}>
                     <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
                   </Button>
                 </div>
