@@ -70,7 +70,10 @@ const ServiceOrders = () => {
   const handleDelete = (id: string) => deleteOrder(id);
 
   const exportPDF = () => exportOrdersReportPDF(filtered, company);
-  const exportSinglePDF = (o: ServiceOrder) => exportSingleOrderPDF(o, company);
+  const exportSinglePDF = (o: ServiceOrder) => {
+    const client = clients.find(c => c.id === o.clientId);
+    exportSingleOrderPDF(o, company, client);
+  };
 
   return (
     <div className="space-y-6">
