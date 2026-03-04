@@ -285,19 +285,27 @@ export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo
   });
 
   // Signature area
-  const sigY = y + 20;
+  const sigY = y + 25;
   doc.setDrawColor(...COLORS.textDark);
   doc.setLineWidth(0.3);
-  
-  // Left signature
-  doc.line(14, sigY, 90, sigY);
+
+  // Labels above signature lines
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.textDark);
+  doc.text('Cliente:', 14, sigY - 3);
+  doc.text('Técnico:', 120, sigY - 3);
+  doc.setFont('helvetica', 'normal');
+
+  // Signature lines
+  doc.line(14, sigY + 12, 95, sigY + 12);
+  doc.line(120, sigY + 12, 196, sigY + 12);
+
+  // Labels below
   doc.setFontSize(7);
   doc.setTextColor(...COLORS.textMuted);
-  doc.text('Assinatura do Cliente', 52, sigY + 5, { align: 'center' });
-
-  // Right signature
-  doc.line(120, sigY, 196, sigY);
-  doc.text('Assinatura do Técnico', 158, sigY + 5, { align: 'center' });
+  doc.text('Assinatura do Cliente', 54, sigY + 17, { align: 'center' });
+  doc.text('Assinatura do Técnico', 158, sigY + 17, { align: 'center' });
 
   drawFooter(doc, company);
   doc.setTextColor(0, 0, 0);
