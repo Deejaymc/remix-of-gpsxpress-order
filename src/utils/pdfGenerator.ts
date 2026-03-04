@@ -200,10 +200,12 @@ export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo
   y = 64;
   y = drawSectionTitle(doc, 'DADOS DO CLIENTE', y);
 
-  doc.setDrawColor(...COLORS.borderLight);
+  doc.setDrawColor(...COLORS.textDark);
   doc.setLineWidth(0.2);
   const clientBoxH = client ? 32 : 18;
-  doc.roundedRect(14, y, 182, clientBoxH, 2, 2, 'S');
+  // Top and bottom lines only
+  doc.line(14, y, 196, y);
+  doc.line(14, y + clientBoxH, 196, y + clientBoxH);
 
   if (client) {
     drawInfoRow(doc, 'Nome', client.name, 20, y + 7);
@@ -215,7 +217,7 @@ export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo
     drawInfoRow(doc, 'Endereço', enderecoCompleto || client.address || '—', 85, y + 20);
 
     // Vertical dividers
-    doc.setDrawColor(...COLORS.borderLight);
+    doc.setDrawColor(...COLORS.textDark);
     doc.line(80, y + 3, 80, y + 29);
     doc.line(145, y + 3, 145, y + 12);
   } else {
@@ -225,66 +227,65 @@ export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo
   y += clientBoxH + 4;
 
   // Order info grid
-  doc.setDrawColor(...COLORS.borderLight);
+  doc.setDrawColor(...COLORS.textDark);
   doc.setLineWidth(0.2);
-  doc.roundedRect(14, y, 182, 32, 2, 2, 'S');
+  doc.line(14, y, 196, y);
+  doc.line(14, y + 32, 196, y + 32);
 
   drawInfoRow(doc, 'Técnico', o.technicianName || '—', 20, y + 7);
   drawInfoRow(doc, 'Produto/Equipamento', o.productName || '—', 85, y + 7);
   drawInfoRow(doc, 'Data de Abertura', new Date(o.createdAt).toLocaleDateString('pt-BR'), 150, y + 7);
 
   drawInfoRow(doc, 'Prioridade', priorityConfig[o.priority].label, 20, y + 20);
-  drawInfoRow(doc, 'Valor', `Ao ${o.value?.toFixed(2) || '0.00'}`, 85, y + 20);
   if (o.completedAt) {
-    drawInfoRow(doc, 'Data de Conclusão', new Date(o.completedAt).toLocaleDateString('pt-BR'), 150, y + 20);
+    drawInfoRow(doc, 'Data de Conclusão', new Date(o.completedAt).toLocaleDateString('pt-BR'), 85, y + 20);
   }
 
   // Vertical dividers in info grid
-  doc.setDrawColor(...COLORS.borderLight);
+  doc.setDrawColor(...COLORS.textDark);
   doc.line(80, y + 3, 80, y + 29);
   doc.line(145, y + 3, 145, y + 29);
 
   // Content sections
   y += 38;
   const sections = [
-    { title: 'DESCRIÇÃO DO SERVIÇO', content: o.description },
-    { title: 'DIAGNÓSTICO TÉCNICO', content: o.diagnosis },
-    { title: 'SOLUÇÃO APLICADA', content: o.solution },
+    { title: 'DESCRIÇÃO DO SERVIÇO', content: o.description, manuscriptLines: false },
+    { title: 'DIAGNÓSTICO TÉCNICO', content: o.diagnosis, manuscriptLines: false },
+    { title: 'SOLUÇÃO APLICADA', content: o.solution, manuscriptLines: true },
   ];
 
   sections.forEach(sec => {
-    if (!sec.content) return;
     y = drawSectionTitle(doc, sec.title, y);
     
-    doc.setFontSize(9);
-    doc.setTextColor(...COLORS.textDark);
-    const lines = doc.splitTextToSize(sec.content, 172);
-    doc.text(lines, 18, y + 4);
-    y += lines.length * 4.5 + 10;
+    if (sec.content) {
+      doc.setFontSize(9);
+      doc.setTextColor(...COLORS.textDark);
+      const lines = doc.splitTextToSize(sec.content, 172);
+      doc.text(lines, 18, y + 4);
+      y += lines.length * 4.5 + 6;
+    }
+
+    if (sec.manuscriptLines) {
+      // Draw lined area for handwriting
+      const lineSpacing = 8;
+      const numLines = 6;
+      doc.setDrawColor(...COLORS.textDark);
+      doc.setLineWidth(0.15);
+      for (let i = 0; i < numLines; i++) {
+        const ly = y + (i * lineSpacing) + 4;
+        doc.line(18, ly, 192, ly);
+      }
+      y += numLines * lineSpacing + 8;
+    } else if (!sec.content) {
+      y += 4;
+    } else {
+      y += 4;
+    }
   });
 
-  // Value box
-  y += 4;
-  doc.setFillColor(...COLORS.dark);
-  doc.roundedRect(110, y, 86, 16, 2, 2, 'F');
-  
-  // Accent stripe on value box
-  doc.setFillColor(...COLORS.accent);
-  doc.roundedRect(110, y, 3, 16, 1, 0, 'F');
-
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...COLORS.midGray);
-  doc.text('VALOR TOTAL', 118, y + 6);
-  
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...COLORS.accent);
-  doc.text(`Ao ${o.value?.toFixed(2) || '0.00'}`, 192, y + 12, { align: 'right' });
-
   // Signature area
-  const sigY = y + 36;
-  doc.setDrawColor(...COLORS.borderLight);
+  const sigY = y + 20;
+  doc.setDrawColor(...COLORS.textDark);
   doc.setLineWidth(0.3);
   
   // Left signature
