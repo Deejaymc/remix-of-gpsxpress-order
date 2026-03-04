@@ -52,10 +52,6 @@ function drawHeader(doc: jsPDF, company: CompanyInfo, logoDataUrl?: string | nul
   doc.setFillColor(...COLORS.accent);
   doc.rect(0, 0, 210, 3, 'F');
 
-  // Header background
-  doc.setFillColor(...COLORS.dark);
-  doc.rect(0, 3, 210, 32, 'F');
-
   let textStartX = 14;
 
   // Logo
@@ -69,19 +65,19 @@ function drawHeader(doc: jsPDF, company: CompanyInfo, logoDataUrl?: string | nul
   }
 
   // Company name
-  doc.setTextColor(...COLORS.white);
+  doc.setTextColor(...COLORS.textDark);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.text(company.name || 'GPSXPRESS', textStartX, 17);
 
   // Tagline / subtitle
   doc.setFontSize(7);
-  doc.setTextColor(...COLORS.accent);
+  doc.setTextColor(...COLORS.textMuted);
   doc.text('RASTREAMENTO & TECNOLOGIA', textStartX, 23);
 
   // Company details right side
   doc.setFontSize(7);
-  doc.setTextColor(...COLORS.midGray);
+  doc.setTextColor(...COLORS.textMuted);
   const rightX = 196;
   let lineY = 13;
   
@@ -146,11 +142,11 @@ function drawStatusBadge(doc: jsPDF, status: ServiceOrder['status'], x: number, 
 }
 
 function drawSectionTitle(doc: jsPDF, title: string, y: number): number {
-  doc.setFillColor(...COLORS.dark);
+  doc.setFillColor(...COLORS.lightGray);
   doc.roundedRect(14, y, 182, 7, 1, 1, 'F');
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...COLORS.accent);
+  doc.setTextColor(...COLORS.textDark);
   doc.text(title, 18, y + 5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
@@ -194,7 +190,12 @@ export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo
   doc.text(`Cliente: ${o.clientName}`, 20, y + 14);
 
   // Status badge
-  drawStatusBadge(doc, o.status, 150, y + 7);
+  // Status badge - use text instead of colored badge for black text
+  const cfg = statusConfig[o.status];
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.textDark);
+  doc.text(cfg.label, 150, y + 7);
 
   // Client details section
   y = 64;
@@ -369,20 +370,20 @@ export async function exportOrdersReportPDF(orders: ServiceOrder[], company: Com
     ]),
     styles: { fontSize: 8, cellPadding: 3, textColor: COLORS.textDark },
     headStyles: {
-      fillColor: COLORS.dark,
-      textColor: COLORS.accent,
+      fillColor: COLORS.lightGray,
+      textColor: COLORS.textDark,
       fontStyle: 'bold',
       fontSize: 7.5,
     },
-    alternateRowStyles: { fillColor: COLORS.lightGray },
+    alternateRowStyles: { fillColor: [255, 255, 255] as [number, number, number] },
     columnStyles: {
-      0: { cellWidth: 18, fontStyle: 'bold', textColor: COLORS.accent },
+      0: { cellWidth: 18, fontStyle: 'bold', textColor: COLORS.textDark },
       5: { halign: 'right', fontStyle: 'bold' },
     },
     foot: [['', '', '', '', 'TOTAL', `Ao ${total.toFixed(2)}`]],
     footStyles: {
-      fillColor: COLORS.dark,
-      textColor: COLORS.accent,
+      fillColor: COLORS.lightGray,
+      textColor: COLORS.textDark,
       fontStyle: 'bold',
       fontSize: 9,
     },
