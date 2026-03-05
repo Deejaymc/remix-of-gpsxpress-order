@@ -166,8 +166,15 @@ function drawInfoRow(doc: jsPDF, label: string, value: string, x: number, y: num
 
 export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo, client?: DbClient) {
   const doc = new jsPDF();
+  const pageH = doc.internal.pageSize.height;
   const logoDataUrl = company.logoUrl ? await loadImage(company.logoUrl) : null;
   drawHeader(doc, company, logoDataUrl);
+
+  // Side borders (black lines on left and right edges)
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.line(5, 0, 5, pageH);
+  doc.line(205, 0, 205, pageH);
 
   // Document title bar
   let y = 42;
@@ -189,7 +196,6 @@ export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo
   doc.setTextColor(...COLORS.textMuted);
   doc.text(`Cliente: ${o.clientName}`, 20, y + 14);
 
-  // Status badge
   // Status badge - use text instead of colored badge for black text
   const cfg = statusConfig[o.status];
   doc.setFontSize(8);
@@ -203,29 +209,51 @@ export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo
 
   doc.setDrawColor(...COLORS.textDark);
   doc.setLineWidth(0.2);
-  const clientBoxH = client ? 32 : 18;
-  // Top and bottom lines only
-  doc.line(14, y, 196, y);
-  doc.line(14, y + clientBoxH, 196, y + clientBoxH);
 
   if (client) {
+    // Calculate dynamic height based on content
+    const maxFieldWidth = 55; // width available for address field
+    const enderecoCompleto = [client.rua, client.municipio, client.provincia].filter(Boolean).join(', ');
+    const enderecoText = enderecoCompleto || client.address || '—';
+    
+    doc.setFontSize(9);
+    const enderecoLines = doc.splitTextToSize(enderecoText, maxFieldWidth);
+    const extraEnderecoH = Math.max(0, (enderecoLines.length - 1) * 4);
+    
+    const clientBoxH = 32 + extraEnderecoH;
+    
+    doc.line(14, y, 196, y);
+    doc.line(14, y + clientBoxH, 196, y + clientBoxH);
+
     drawInfoRow(doc, 'Nome', client.name, 20, y + 7);
     drawInfoRow(doc, 'NIF', client.nif || '—', 85, y + 7);
     drawInfoRow(doc, 'Telefone', client.phone || '—', 150, y + 7);
 
     drawInfoRow(doc, 'Email', client.email || '—', 20, y + 20);
-    const enderecoCompleto = [client.rua, client.municipio, client.provincia].filter(Boolean).join(', ');
-    drawInfoRow(doc, 'Endereço', enderecoCompleto || client.address || '—', 85, y + 20);
+    
+    // Draw address with auto-wrap
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.textMuted);
+    doc.text('ENDEREÇO', 85, y + 20);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...COLORS.textDark);
+    doc.text(enderecoLines, 85, y + 25);
 
     // Vertical dividers
     doc.setDrawColor(...COLORS.textDark);
-    doc.line(80, y + 3, 80, y + 29);
+    doc.line(80, y + 3, 80, y + clientBoxH - 3);
     doc.line(145, y + 3, 145, y + 12);
-  } else {
-    drawInfoRow(doc, 'Nome', o.clientName, 20, y + 7);
-  }
 
-  y += clientBoxH + 4;
+    y += clientBoxH + 4;
+  } else {
+    const clientBoxH = 18;
+    doc.line(14, y, 196, y);
+    doc.line(14, y + clientBoxH, 196, y + clientBoxH);
+    drawInfoRow(doc, 'Nome', o.clientName, 20, y + 7);
+    y += clientBoxH + 4;
+  }
 
   // Order info grid
   doc.setDrawColor(...COLORS.textDark);
@@ -267,9 +295,9 @@ export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo
     }
 
     if (sec.manuscriptLines) {
-      // Draw lined area for handwriting
+      // Draw 3 fixed lines for handwriting
       const lineSpacing = 8;
-      const numLines = 6;
+      const numLines = 3;
       doc.setDrawColor(...COLORS.textDark);
       doc.setLineWidth(0.15);
       for (let i = 0; i < numLines; i++) {
@@ -284,8 +312,8 @@ export async function exportSingleOrderPDF(o: ServiceOrder, company: CompanyInfo
     }
   });
 
-  // Signature area
-  const sigY = y + 25;
+  // Signature area - fixed at bottom of page
+  const sigY = pageH - 40;
   doc.setDrawColor(...COLORS.textDark);
   doc.setLineWidth(0.3);
 
