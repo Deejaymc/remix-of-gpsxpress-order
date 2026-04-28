@@ -105,7 +105,7 @@ export function useServiceOrders() {
     if (order.priority !== undefined) dbUpdate.priority = order.priority;
     if (order.value !== undefined) dbUpdate.value = order.value;
 
-    const { error } = await supabase.from('service_orders').update(dbUpdate).eq('id', id);
+    const { error } = await supabase.from('service_orders').update(dbUpdate as any).eq('id', id);
     if (error) { toast.error('Erro ao atualizar OS'); return; }
     toast.success('OS atualizada!');
     fetchOrders();

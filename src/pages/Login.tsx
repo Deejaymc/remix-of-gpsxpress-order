@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
 import logo from '@/assets/logo.png';
@@ -113,6 +114,15 @@ const Login = () => {
           )}
           ENTRAR COM GOOGLE
         </Button>
+
+        <div className="mt-5 text-center">
+          <Link
+            to="/setup"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors tracking-wider"
+          >
+            Configurar primeiro administrador
+          </Link>
+        </div>
       </div>
     </div>
   );
