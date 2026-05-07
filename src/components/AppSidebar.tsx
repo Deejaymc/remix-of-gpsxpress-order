@@ -1,5 +1,6 @@
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
 import logo from '@/assets/logo.png';
 import {
   Sidebar,
