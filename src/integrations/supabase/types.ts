@@ -63,6 +63,8 @@ export type Database = {
           email: string
           id: string
           ie: string
+          is_active: boolean
+          label: string
           logo_url: string | null
           municipio: string
           name: string
@@ -70,6 +72,7 @@ export type Database = {
           phone: string
           provincia: string
           rua: string
+          slot: number
           updated_at: string
           user_id: string
           website: string
@@ -80,6 +83,8 @@ export type Database = {
           email?: string
           id?: string
           ie?: string
+          is_active?: boolean
+          label?: string
           logo_url?: string | null
           municipio?: string
           name?: string
@@ -87,6 +92,7 @@ export type Database = {
           phone?: string
           provincia?: string
           rua?: string
+          slot?: number
           updated_at?: string
           user_id: string
           website?: string
@@ -97,6 +103,8 @@ export type Database = {
           email?: string
           id?: string
           ie?: string
+          is_active?: boolean
+          label?: string
           logo_url?: string | null
           municipio?: string
           name?: string
@@ -104,6 +112,7 @@ export type Database = {
           phone?: string
           provincia?: string
           rua?: string
+          slot?: number
           updated_at?: string
           user_id?: string
           website?: string

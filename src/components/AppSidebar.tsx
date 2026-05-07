@@ -1,5 +1,6 @@
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
 import logo from '@/assets/logo.png';
 import {
   Sidebar,
@@ -34,12 +35,41 @@ const menuItems = [
 
 export function AppSidebar() {
   const { logout, isAdmin } = useAuth();
+  const { profiles, activeProfile, setActive } = useCompanySettings();
+  const cadastradas = profiles.filter(p => p.id);
 
   return (
     <Sidebar className="border-r border-border bg-sidebar">
       <div className="p-4 flex items-center justify-center border-b border-border">
         <img src={logo} alt="GPSXpress" className="h-12" />
       </div>
+
+      {cadastradas.length > 0 && (
+        <div className="px-3 py-3 border-b border-border">
+          <label className="text-[10px] font-display tracking-widest text-muted-foreground block mb-1.5">EMPRESA ATIVA</label>
+          <div className="flex flex-col gap-1">
+            {profiles.map(p => {
+              const disabled = !p.id;
+              const isActive = activeProfile?.slot === p.slot && !!p.id;
+              return (
+                <button
+                  key={p.slot}
+                  disabled={disabled}
+                  onClick={() => setActive(p.slot)}
+                  className={`text-left text-xs px-2 py-1.5 rounded border transition-colors ${
+                    isActive
+                      ? 'border-primary text-primary bg-primary/10 glow-primary'
+                      : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
+                  } ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  {p.label}{disabled ? ' (vazia)' : ''}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="font-display text-xs tracking-widest text-muted-foreground">
